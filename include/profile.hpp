@@ -1,24 +1,18 @@
+#pragma once
 #include <ctime>
 #include <iostream>
 #include <vector>
-
-
+#define DEFAULT_PROFILE_NAME "_default_name___"
 class Profile {
 public:
-    Profile(const char* name, const char* password);
-    const char* getName() const;
-    const char* getPassword() const;
-    void addFollower(int followerId);
+    Profile();
+    Profile(std::string name);
+    std::string getName() const;
+    void addFollower(std::string follower);
+    std::vector<std::string> getFollowers();
 
 private:
-    const char* name; ;//will be used as identifier
-    const char* password;
-    std::vector<int> followers;
+    std::string name; ;//will be used as identifier
+    std::vector<std::string> followers;
 };
-typedef struct{
-    int id;
-    Profile *author;
-    time_t time_of_notification;
-    int char_count;
-    int remaining_followers; //number of followers that didnt reeceived the notification
-}Notification;
+
