@@ -11,3 +11,6 @@ void Profile::addFollower(std::string follower){
     //this returns a pointer to followers (can cause problems, but whatever)
     return this->followers;
 }
+void Profile::addNotification(Notification notification){
+    this->notifications_history.push_back(notification);
+}

@@ -5,4 +5,4 @@ typedef struct __packet{
     uint16_t length; //Comprimento do payload
     uint16_t timestamp; // Timestamp do dado
     const char* _payload; //Dados da mensagem
-} packet;
+}Packet;

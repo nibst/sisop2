@@ -5,4 +5,4 @@ typedef struct __notification{
     uint16_t length; //Tamanho da mensagem
     uint16_t pending; //Quantidade de leitores pendentes
     const char* _string; //Mensagem
-} notification;
+} Notification;
