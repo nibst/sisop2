@@ -1,0 +1,56 @@
+CC = g++
+
+SRC_DIR := src/
+OBJ_DIR := obj/
+BIN_DIR := bin/
+INC_DIR := include/
+HIST_DIR := bin/hist/
+
+all: dirs ${BIN_DIR}client ${BIN_DIR}server
+
+${BIN_DIR}server: ${OBJ_DIR}RW_monitor.o ${OBJ_DIR}profile.o ${OBJ_DIR}Group.o ${OBJ_DIR}serverApp.o ${OBJ_DIR}communication_manager.o
+	${CC} ${OBJ_DIR}serverApp.o ${OBJ_DIR}server.o ${OBJ_DIR}RW_monitor.o ${OBJ_DIR}profile.o ${OBJ_DIR}Group.o ${OBJ_DIR}communication_manager.o -o ${BIN_DIR}server -lpthread -Wall
+
+${BIN_DIR}client:  ${OBJ_DIR}client_run.o ${OBJ_DIR}communication_manager.o ${OBJ_DIR}RW_monitor.o
+	${CC}  ${OBJ_DIR}client_run.o ${OBJ_DIR}client.o ${OBJ_DIR}communication_manager.o ${OBJ_DIR}RW_monitor.o -o ${BIN_DIR}client -lpthread -Wall
+	
+${OBJ_DIR}server_run.o: ${OBJ_DIR}server.o ${SRC_DIR}server_run.cpp  ${INC_DIR}constants.hpp
+	${CC} -c ${SRC_DIR}server_run.cpp -I ${INC_DIR} -o ${OBJ_DIR}server_run.o -Wall
+	
+${OBJ_DIR}client_run.o: ${OBJ_DIR}client.o ${SRC_DIR}client_run.cpp  ${INC_DIR}constants.hpp
+	${CC} -c ${SRC_DIR}client_run.cpp -I ${INC_DIR} -o ${OBJ_DIR}client_run.o -Wall
+
+${OBJ_DIR}server.o: ${SRC_DIR}server.cpp ${INC_DIR}server.hpp  ${INC_DIR}constants.hpp
+	${CC} -c ${SRC_DIR}server.cpp -I ${INC_DIR} -o ${OBJ_DIR}server.o -Wall
+
+${OBJ_DIR}client.o: ${SRC_DIR}client.cpp ${INC_DIR}client.hpp ${INC_DIR}constants.hpp
+	${CC} -c ${SRC_DIR}client.cpp -I ${INC_DIR} -o ${OBJ_DIR}client.o -Wall
+
+${OBJ_DIR}profile.o: ${SRC_DIR}profile.cpp
+	${CC} -c ${SRC_DIR}profile.cpp -I ${INC_DIR} -o ${OBJ_DIR}profile.o -Wall
+
+${OBJ_DIR}RW_monitor.o: ${SRC_DIR}RW_monitor.cpp
+	${CC} -c ${SRC_DIR}RW_monitor.cpp -I ${INC_DIR} -o ${OBJ_DIR}RW_monitor.o -Wall
+
+${OBJ_DIR}communication_manager.o: ${SRC_DIR}communication_manager.cpp ${INC_DIR}communication_manager.hpp
+	${CC} -c ${SRC_DIR}communication_manager.cpp -I ${INC_DIR} -o ${OBJ_DIR}communication_manager.o -Wall
+
+${OBJ_DIR}notification_manager.o: ${SRC_DIR}notification_manager.cpp ${INC_DIR}notification_manager.hpp ${INC_DIR}constants.hpp
+	${CC} -c ${SRC_DIR}notification_manager.cpp -I ${INC_DIR} -o ${OBJ_DIR}notification_manager.o -Wall
+
+${OBJ_DIR}profile_manager.o: ${SRC_DIR}profile_manager.cpp ${INC_DIR}profile_manager.hpp ${INC_DIR}constants.hpp
+	${CC} -c ${SRC_DIR}profile_manager.cpp -I ${INC_DIR} -o ${OBJ_DIR}profile_manager.o -Wall
+
+dirs:
+	mkdir -p ${OBJ_DIR}
+	mkdir -p ${BIN_DIR}
+	mkdir -p ${HIST_DIR}
+
+clean:	
+	rm ${OBJ_DIR}*.o ${BIN_DIR}server ${BIN_DIR}client ${HIST_DIR}*.hist
+
+run_server: ${BIN_DIR}server
+	cd ${BIN_DIR} && ./server 50
+
+run_client: ${BIN_DIR}client
+	cd ${BIN_DIR} && ./client profile group localhost 6789

@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <atomic>
 #include <pthread.h>

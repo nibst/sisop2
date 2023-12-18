@@ -45,6 +45,14 @@
         "ostream": "cpp",
         "stdexcept": "cpp",
         "streambuf": "cpp",
-        "typeinfo": "cpp"
-    }
+        "typeinfo": "cpp",
+        "fstream": "cpp",
+        "map": "cpp",
+        "sstream": "cpp",
+        "chrono": "cpp",
+        "ratio": "cpp",
+        "cinttypes": "cpp",
+        "csignal": "cpp"
+    },
+    "julia.environmentPath": "/home/nikolas/Documents/ufrgs/sisop2/trab1"
 }
