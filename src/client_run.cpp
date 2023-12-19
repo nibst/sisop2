@@ -1,7 +1,7 @@
 #include "client.hpp"
 #include "profile.hpp"
 #include <string.h>
-int main(int argc, char** argv)
+int main2(int argc, char** argv)
 {
     // Parse command line input
     /*

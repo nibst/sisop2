@@ -5,10 +5,10 @@
 #include <signal.h>
 //define the static variables
 std::atomic<bool> UDPServer::stop_issued;
-int UDPServer::message_history;
 int UDPServer::server_socket;
 std::map<std::string, pthread_t> UDPServer::connection_handler_threads;
 ProfileManager UDPServer::profileManager; //
+NotificationManager UDPServer::notificationManager; //
 RW_Monitor UDPServer::threads_monitor;
 pthread_mutex_t mtx;
 
@@ -51,13 +51,13 @@ void UDPServer::run() {
         {    
             first_connection = false;
             // Start new thread for new connection
-            pthread_t comm_thread;
+            pthread_t comm_thread, consumer_thread;
             // Spawn new thread for handling that client
             std::cout<<"thread create"<<std::endl;
             if (pthread_create( &comm_thread, NULL, handleConnection, NULL) < 0)
             {
                 // Close socket if no thread was created
-                std::cerr << "Could not create thread for client "  << std::endl;
+                std::cerr << "Could not create thread for comm_thread "  << std::endl;
             }
 
             // Request read rights
@@ -127,6 +127,7 @@ void *UDPServer::handleCommands(void* arg)
     if (!stop_issued) UDPServer::stop();
     pthread_exit(NULL);
 }
+
 void UDPServer::stop()
 {
     ProfileManager::profiles_monitor.requestRead();
@@ -182,9 +183,9 @@ void *UDPServer::handleConnection(void* arg)
                     *profile = profileManager.getProfile(profilename);
                 // If profile still exist
                 if (profile != NULL && !stop_issued)
-                {
+                {   
                     // Say message to the followers
-                    profileManager.sayToFollowers(server_socket, profilename, read_message->_string, PAK_DATA);
+                    notificationManager.notificationReceived(read_message, profileManager.getProfile(profilename).getFollowers());
                 }
                 
                 break;
@@ -204,9 +205,15 @@ void *UDPServer::handleConnection(void* arg)
                         }
                         profileManager.addSession(profilename,client_address);
                         ProfileManager::profiles_monitor.releaseWrite();
+                        
                         pthread_mutex_unlock(&mtx);
+                        pthread_t consumer_thread;
+                        if (pthread_create( &consumer_thread, NULL, consumePendingNotifications, (void*)profilename.c_str()) < 0){
+                                // Close socket if no thread was created
+                                std::cerr << "Could not create thread for consumer_thread "  << std::endl;
+                            }
 
-                    }
+                    }   
                     else{
                         message = "Connection was refused: exceeds MAX_SESSIONS (" + std::to_string(MAX_SESSIONS) + ")";
                         // Compose message record
@@ -236,17 +243,31 @@ void *UDPServer::handleConnection(void* arg)
                 if(command_message->type == LIST_PROFILES_MESSAGE){
                     profileManager.printProfiles();
                 }
-                if(command_message->type == LOGOUT_MESSAGE){
-                    std::cout << "LOGOUT " <<  std::endl;
+                if(command_message->type == DISCONNECT_CLIENT_MESSAGE){
+
+                    ProfileManager::profiles_monitor.requestWrite();
+                    profilename = std::string(command_message->sender);
+                    std::vector<int> sessions = profileManager.getSessionsState()[profilename];
+                    for(int state : sessions){
+                        std::string session = profilename + "#" + std::to_string(state);
+                        struct sockaddr_in addr = profileManager.getSessionsAddr()[session];
+                        if ((client_address.sin_addr.s_addr == addr.sin_addr.s_addr) && (client_address.sin_port == addr.sin_port))
+                            profileManager.deleteSession(profilename, state);
+                    ProfileManager::profiles_monitor.releaseWrite();
+
                     // Request write rights
                     threads_monitor.requestWrite();
 
                     // Remove itself from the threads list
                     connection_handler_threads.erase(profilename);
-
                     // Release write rights
                     threads_monitor.releaseWrite();
+                    pthread_exit(NULL);
+                    ProfileManager::profiles_monitor.requestRead();
+                    profileManager.saveAll();
+                    ProfileManager::profiles_monitor.releaseRead();
                     return NULL;
+                    }
                 }
                 break;
             default:
@@ -255,8 +276,6 @@ void *UDPServer::handleConnection(void* arg)
         }
 
         // Clear the buffers
-        //bzero((void*)client_message, PACKET_MAX);
-        //bzero((void*)message_records, PACKET_MAX * Server::message_history);
     }
 
     // Free received argument
@@ -278,6 +297,41 @@ void *UDPServer::handleConnection(void* arg)
     ProfileManager::profiles_monitor.releaseRead();
     // Exit
     pthread_exit(NULL);
+}
+
+void *UDPServer::consumePendingNotifications(void* arg){
+    //need profilename from thread caller
+    std::string profilename((char*)arg);
+
+	while (!stop_issued)
+	{
+		sleep(1);
+		//verifica se precisa enviar tweet ao cliente
+		if (notificationManager.needsToSend(profilename,profileManager.getSessionsState()))
+		{ 
+			//operation_mtx.lock();
+			//consome tweet e envia ao cliente
+            //ProfileManager::profiles_monitor.requestRead();
+			Notification* notificationToSend = notificationManager.consumePending(profilename);
+			//write_mtx.lock();
+            std::vector<int> sessions = profileManager.getSessionsState()[profilename];
+            for(int state : sessions){
+                std::string session = profilename + "#" + std::to_string(state);
+                struct sockaddr_in addr = profileManager.getSessionsAddr()[session];
+                int read_bytes = CommunicationManager::sendPacket(server_socket, PAK_DATA, (char*)notificationToSend, sizeof(*notificationToSend), addr);
+                if (read_bytes < 0)
+				    std::cout<<"ERROR writing to socket"<<std::endl;
+            }
+            //ProfileManager::profiles_monitor.releaseRead();
+
+			//write_mtx.unlock();
+
+			//operation_mtx.unlock();
+		}
+	}
+    free(arg);
+    pthread_exit(NULL);
+
 }
 
 UDPServer::~UDPServer() {

@@ -7,7 +7,7 @@
 #include "communication_manager.hpp"
 #include "notification_manager.hpp"
 
-RW_Monitor ProfileManager::profiles_monitor;;
+RW_Monitor ProfileManager::profiles_monitor;
 
 
 ProfileManager::ProfileManager(){
@@ -221,4 +221,7 @@ void ProfileManager::sayToFollowers(int socket, std::string senderName, std::str
 
 SessionAddressMap ProfileManager::getSessionsAddr(){
     return this->sessionAddresses;
+}
+SessionStateMap ProfileManager::getSessionsState(){
+    return this->sessionStates;
 }

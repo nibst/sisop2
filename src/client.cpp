@@ -39,6 +39,7 @@ UDPClient::UDPClient(std::string profilename,std::string server_ip):
         commands["LOGIN"] = LOGIN_MESSAGE;
         commands["LOGOUT"] = LOGOUT_MESSAGE;
         commands["LIST"] = LIST_PROFILES_MESSAGE;
+        commands["DISC"] = DISCONNECT_CLIENT_MESSAGE;
 }
 
 UDPClient::UDPClient(std::string profilename,std::string server_ip, std::string server_port):
@@ -54,6 +55,7 @@ UDPClient::UDPClient(std::string profilename,std::string server_ip, std::string 
         commands["LOGIN"] = LOGIN_MESSAGE;
         commands["LOGOUT"] = LOGOUT_MESSAGE;
         commands["LIST"] = LIST_PROFILES_MESSAGE;
+        commands["DISC"] = DISCONNECT_CLIENT_MESSAGE;
      }
 
 

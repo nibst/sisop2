@@ -52,7 +52,8 @@
         "chrono": "cpp",
         "ratio": "cpp",
         "cinttypes": "cpp",
-        "csignal": "cpp"
+        "csignal": "cpp",
+        "queue": "cpp"
     },
     "julia.environmentPath": "/home/nikolas/Documents/ufrgs/sisop2/trab1"
 }
